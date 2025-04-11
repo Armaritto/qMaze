@@ -5,6 +5,7 @@ import {
   CheckCircle, ArrowRightLeft
 } from 'lucide-react';
 import QuestionUploader from './QuestionUploader';
+import Logo from '../../el_2yama.svg';
 
 const DICE_FACES = [Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
 
@@ -36,6 +37,8 @@ export function GameBoard() {
   const [currentDiceFace, setCurrentDiceFace] = useState(0);
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
   const [animatingBoxes, setAnimatingBoxes] = useState<number[]>([]);
+  const [grades, setGrades] = useState<string[]>([]);
+
 
   useEffect(() => {
     let interval: number;
@@ -137,6 +140,12 @@ export function GameBoard() {
     setAnsweredQuestions(prev => new Set([...prev, currentQuestion.id]));
   };
 
+  const handleQuestionsParsed = (parsed: Question[]) => {
+    setQuestions(parsed);
+    const uniqueGrades = Array.from(new Set(parsed.map(q => q.grade)));
+    setGrades(uniqueGrades);
+  };
+
   const renderBoard = () => {
     return GRID_LAYOUT.map((row, rowIndex) => (
       <div key={rowIndex} className="flex gap-4 justify-center">
@@ -150,11 +159,12 @@ export function GameBoard() {
               key={`${rowIndex}-${colIndex}`}
               className={`
                 w-20 h-20 bg-white/80 rounded-lg shadow-lg relative transition-all
-                ${isHighlighted ? 'ring-4 ring-amber-500/50 scale-105' : ''}
+                ${isHighlighted ? 'ring-4' : ''}
                 flex items-center justify-center
                 ${boxNumber === 1 ? 'bg-amber-50/80' : ''}
                 ${boxNumber === 20 ? 'bg-amber-100/80' : ''}
               `}
+              style={isHighlighted ? { borderColor: players[currentPlayer].color, boxShadow: `0 0 0 4px ${players[currentPlayer].color}` } : {}}
             >
               <span className="absolute top-2 left-2 text-sm text-amber-800/70">{boxNumber}</span>
               <div className="flex gap-2">
@@ -177,15 +187,24 @@ export function GameBoard() {
 
   return (
     <>
-      {!questions && <QuestionUploader onQuestionsParsed={setQuestions} />}
+      {!questions && <QuestionUploader onQuestionsParsed={handleQuestionsParsed} />}
       <div className="min-h-screen p-8 flex flex-col items-center justify-center" style={{ background: 'linear-gradient(90deg, #e8e0c3, #ffffff)' }}>
-        <div className="mb-8 flex flex-col items-center">
-          <h1 className="text-amber-900 text-3xl font-bold mb-2 text-center">Quiz Board Game</h1>
-          <div className="flex items-center gap-4">
-            <p className="text-amber-800/70 text-center text-lg">Current Turn: {players[currentPlayer].name}</p>
-            <button onClick={switchTurn} className="bg-white/80 p-2 rounded-lg shadow-lg hover:scale-105 transition">
-              <ArrowRightLeft size={20} className="text-amber-800" />
-            </button>
+      
+        <div className="flex items-center gap-6">
+          <img src={Logo} alt="Logo" className="w-32 h-32" />
+          <div className="flex flex-col items-center">
+            <h1 style= {{ color: '#b6773c' }} className="text-3xl font-bold mb-2 text-center">Race to 20</h1>
+            <div className="flex items-center gap-4">
+              <p style = {{ color: players[currentPlayer].color }} className="text-center text-lg font-bold">
+                {players[currentPlayer].name}
+              </p>
+              <button
+                onClick={switchTurn}
+                className="bg-white/80 p-2 rounded-lg shadow-lg hover:scale-105 transition"
+              >
+                <ArrowRightLeft size={20} className="text-amber-800/70" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -199,7 +218,7 @@ export function GameBoard() {
             disabled={!!currentQuestion || showGradeSelect || isRolling}
             className="bg-white/80 p-4 rounded-lg shadow-lg hover:scale-105 transition disabled:opacity-50"
           >
-            <DiceIcon size={70} className={`text-amber-800 ${isRolling ? 'animate-spin' : ''}`} />
+            <DiceIcon size={70} className={`text-amber-800/70 ${isRolling ? 'animate-spin' : ''}`} />
           </button>
         </div>
 
@@ -207,8 +226,12 @@ export function GameBoard() {
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center">
             <div className="bg-white/90 p-8 rounded-lg shadow-2xl">
               <h2 className="text-2xl mb-4 text-amber-900">Select Grade</h2>
-              {(['Junior 4', 'Junior 5', 'Junior 6'] as const).map(grade => (
-                <button key={grade} onClick={() => selectGrade(grade)} className="block w-full mb-2 p-2 bg-amber-500 text-white rounded hover:bg-amber-600 transition">
+              {grades.map(grade => (
+                <button
+                  key={grade}
+                  onClick={() => selectGrade(grade)}
+                  className="block w-full mb-2 p-2 bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors"
+                >
                   {grade}
                 </button>
               ))}

@@ -10,7 +10,7 @@ export interface Question {
   text: string;
   options: string[];
   correctAnswer: number;
-  grade: 'Junior 4' | 'Junior 5' | 'Junior 6';
+  grade: string;
 }
 
 export interface Box {
