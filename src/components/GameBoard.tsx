@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Player, Question, Box } from '../types';
 import {
   Dice1, Dice2, Dice3, Dice4, Dice5, Dice6,
@@ -36,9 +36,9 @@ export function GameBoard() {
   const [isRolling, setIsRolling] = useState(false);
   const [currentDiceFace, setCurrentDiceFace] = useState(0);
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
+  const [showIncorrectAnswer, setShowIncorrectAnswer] = useState(false);
   const [animatingBoxes, setAnimatingBoxes] = useState<number[]>([]);
   const [grades, setGrades] = useState<string[]>([]);
-
 
   useEffect(() => {
     let interval: number;
@@ -133,9 +133,13 @@ export function GameBoard() {
       }, 300);
     } else {
       setCurrentQuestion(null);
-      setDiceRoll(null);
-      setHighlightBox(null);
-      setCurrentPlayer((currentPlayer + 1) % players.length);
+      setShowIncorrectAnswer(true);
+      setTimeout(() => {
+        setShowIncorrectAnswer(false);
+        setDiceRoll(null);
+        setHighlightBox(null);
+        setCurrentPlayer((currentPlayer + 1) % players.length);
+      }, 1000);
     }
     setAnsweredQuestions(prev => new Set([...prev, currentQuestion.id]));
   };
@@ -230,7 +234,7 @@ export function GameBoard() {
                 <button
                   key={grade}
                   onClick={() => selectGrade(grade)}
-                  className="block w-full mb-2 p-2 bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors"
+                  className="block w-full mb-2 p-2 bg-[#505050] text-white rounded hover:bg-[#2e2e2e] transition-transform transform hover:scale-105"
                 >
                   {grade}
                 </button>
@@ -241,10 +245,27 @@ export function GameBoard() {
 
         {currentQuestion && (
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center">
-            <div className="bg-white/90 p-8 rounded-lg max-w-lg w-full shadow-2xl">
+            <div className="bg-white/90 p-8 rounded-lg max-w-lg w-full shadow-2xl relative">
               <h2 className="text-xl mb-4 text-amber-900">{currentQuestion.text}</h2>
+          
+              <img 
+                src="../../egg.svg" 
+                alt="Easter Egg" 
+                className="absolute -top-10 right-4 w-20 h-20" 
+              /> 
+              
+              <img 
+                src="../../rooster.svg" 
+                alt="Rooster" 
+                className="absolute -bottom-20 -left-12 max-w-[160px] max-h-[160px] w-auto h-auto" 
+              />
+              
               {currentQuestion.options.map((option, index) => (
-                <button key={index} onClick={() => answerQuestion(index)} className="block w-full mb-2 p-2 bg-amber-500 text-white rounded hover:bg-amber-600 transition">
+                <button
+                  key={index}
+                  onClick={() => answerQuestion(index)}
+                  className="block mx-auto w-5/6 mb-2 p-2 bg-[#505050] text-white rounded shadow-lg hover:bg-[#2e2e2e] transition-transform transform hover:scale-105"
+                >
                   {option}
                 </button>
               ))}
@@ -257,6 +278,15 @@ export function GameBoard() {
             <div className="bg-green-500/90 text-white px-6 py-4 rounded-lg shadow-xl flex items-center gap-2 animate-bounce">
               <CheckCircle className="w-6 h-6" />
               <span className="text-lg font-semibold">Correct Answer!</span>
+            </div>
+          </div>
+        )}
+
+        {showIncorrectAnswer && (
+          <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
+            <div className="bg-red-500/90 text-white px-6 py-4 rounded-lg shadow-xl flex items-center gap-2 animate-bounce">
+              <CheckCircle className="w-6 h-6" />
+              <span className="text-lg font-semibold">Incorrect Answer!</span>
             </div>
           </div>
         )}
