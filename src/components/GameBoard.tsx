@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import QuestionUploader from './QuestionUploader';
 import Logo from '../../el_2yama.svg';
+import Rooster from '../../rooster.svg';
+import Egg from '../../egg.svg';
 
 const DICE_FACES = [Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
 
@@ -229,7 +231,7 @@ export function GameBoard() {
         {showGradeSelect && (
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center">
             <div className="bg-white/90 p-8 rounded-lg shadow-2xl">
-              <h2 className="text-2xl mb-4 text-amber-900">Select Grade</h2>
+              <h2 className="text-2xl mb-4 text-amber-900">Ekhtar Osra</h2>
               {grades.map(grade => (
                 <button
                   key={grade}
@@ -247,18 +249,8 @@ export function GameBoard() {
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center">
             <div className="bg-white/90 p-8 rounded-lg max-w-lg w-full shadow-2xl relative">
               <h2 className="text-xl mb-4 text-amber-900">{currentQuestion.text}</h2>
-          
-              <img 
-                src="../../egg.svg" 
-                alt="Easter Egg" 
-                className="absolute -top-10 right-4 w-20 h-20" 
-              /> 
-              
-              <img 
-                src="../../rooster.svg" 
-                alt="Rooster" 
-                className="absolute -bottom-20 -left-12 max-w-[160px] max-h-[160px] w-auto h-auto" 
-              />
+              <img src={Egg} alt="Easter Egg" className="absolute -top-10 right-4 w-20 h-20" />
+              <img src={Rooster} alt="Rooster" className="absolute -bottom-20 -left-12 max-w-[160px] max-h-[160px] w-auto h-auto" />
               
               {currentQuestion.options.map((option, index) => (
                 <button
