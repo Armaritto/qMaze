@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Player, Question, Box } from '../types';
 import { 
   Dice1, Dice2, Dice3, Dice4, Dice5, Dice6,
-  CheckCircle
+  CheckCircle,
+  ArrowRightLeft
 } from 'lucide-react';
 
 const DICE_FACES = [Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
@@ -189,28 +190,33 @@ export function GameBoard() {
   useEffect(() => {
     let interval: number;
     if (isRolling) {
+      let rollCount = 0;
+      const totalRolls = 15;
+      
       interval = setInterval(() => {
-        setCurrentDiceFace(prev => (prev + 1) % 6);
-      }, 100);
-
-      setTimeout(() => {
-        setIsRolling(false);
-        clearInterval(interval);
-      }, 1000);
+        rollCount++;
+        if (rollCount < totalRolls) {
+          setCurrentDiceFace(Math.floor(Math.random() * 6));
+        } else {
+          clearInterval(interval);
+          setCurrentDiceFace(diceRoll! - 1);
+          setIsRolling(false);
+        }
+      }, 60);
     }
     return () => clearInterval(interval);
-  }, [isRolling]);
+  }, [isRolling, diceRoll]);
+
+  const switchTurn = () => {
+    setCurrentPlayer((currentPlayer + 1) % players.length);
+  };
 
   const rollDice = () => {
+    const roll = Math.floor(Math.random() * 6) + 1;
+    setDiceRoll(roll);
     setIsRolling(true);
-    const roll = 1 //Math.floor(Math.random() * 6) + 1;
     
     setTimeout(() => {
-      setDiceRoll(roll);
-      setCurrentDiceFace(roll - 1);
-      console.log('Dice rolled1:', currentDiceFace);
-      
-      // Calculate path to target
       const currentPos = players[currentPlayer].position;
       const targetPos = Math.min(currentPos + roll, BOXES.length);
       const path = Array.from(
@@ -218,7 +224,6 @@ export function GameBoard() {
         (_, i) => currentPos + i
       );
       
-      // Animate through path
       let delay = 0;
       let total_delay = 3000;
       let animation_delay = total_delay / path.length;
@@ -228,7 +233,7 @@ export function GameBoard() {
         }, delay);
         delay += animation_delay; 
       });
-      console.log('Dice rolled2:', currentDiceFace);
+      
       setTimeout(() => {
         setShowGradeSelect(true);
       }, delay + 200);
@@ -262,7 +267,6 @@ export function GameBoard() {
         ));
         setAnimatingBoxes(prev => [...prev, position]);
         
-        // Remove animation class after it completes
         setTimeout(() => {
           setAnimatingBoxes(prev => prev.filter(box => box !== position));
         }, 500);
@@ -277,24 +281,19 @@ export function GameBoard() {
     if (!currentQuestion || !diceRoll) return;
 
     if (answerIndex === currentQuestion.correctAnswer) {
-      // First zoom out the question modal
       setCurrentQuestion(null);
       
-      // Show correct answer popup
       setTimeout(() => {
         setShowCorrectAnswer(true);
         
-        // Hide correct answer popup
         setTimeout(() => {
           setShowCorrectAnswer(false);
           
-          // Start player movement animation
           const startPos = players[currentPlayer].position;
           const targetPos = Math.min(startPos + diceRoll, BOXES.length);
           
           const animationDuration = animatePlayerMovement(startPos, targetPos);
           
-          // After all animations complete
           setTimeout(() => {
             setCurrentPlayer((currentPlayer + 1) % players.length);
             setDiceRoll(null);
@@ -329,21 +328,22 @@ export function GameBoard() {
             <div
               key={`${rowIndex}-${colIndex}`}
               className={`
-                w-20 h-20 bg-white rounded-lg shadow-lg relative
+                w-20 h-20 bg-white/80 backdrop-blur-sm rounded-lg shadow-lg relative
                 transition-all duration-300 ease-in-out
-                ${isHighlighted ? 'ring-4 ring-red-500 ring-opacity-50 transform scale-105' : ''}
+                ${isHighlighted ? 'ring-4 ring-amber-500/50 transform scale-105' : ''}
                 flex items-center justify-center
-                ${boxNumber === 1 ? 'bg-green-100' : ''}
-                ${boxNumber === 20 ? 'bg-blue-100' : ''}
+                ${boxNumber === 1 ? 'bg-amber-50/80' : ''}
+                ${boxNumber === 20 ? 'bg-amber-100/80' : ''}
+                hover:shadow-xl hover:scale-105
               `}
             >
-              <span className="absolute top-2 left-2 text-sm text-gray-500">{boxNumber}</span>
+              <span className="absolute top-2 left-2 text-sm text-amber-800/70">{boxNumber}</span>
               <div className="flex gap-2">
                 {playersInBox.map(player => (
                   <div
                     key={player.id}
                     className={`
-                      w-6 h-6 rounded-full
+                      w-6 h-6 rounded-full shadow-md
                       transition-all duration-300
                       ${isAnimating ? 'animate-bounce transform scale-110' : ''}
                     `}
@@ -361,13 +361,24 @@ export function GameBoard() {
   const DiceIcon = DICE_FACES[currentDiceFace];
 
   return (
-    <div className="min-h-screen bg-gray-900 p-8 flex flex-col items-center justify-center">
-      <div className="mb-8">
-        <h1 className="text-white text-2xl font-bold mb-2">Quiz Board Game</h1>
-        <p className="text-gray-400">Current Turn: {players[currentPlayer].name}</p>
+    <div 
+      className="min-h-screen p-8 flex flex-col items-center justify-center"
+      style={{ background: 'linear-gradient(90deg, #e8e0c3, #ffffff)' }}
+    >
+      <div className="mb-8 flex flex-col items-center">
+        <h1 className="text-amber-900 text-3xl font-bold mb-2 text-center">Quiz Board Game</h1>
+        <div className="flex items-center gap-4">
+          <p className="text-amber-800/70 text-center text-lg">Current Turn: {players[currentPlayer].name}</p>
+          <button
+            onClick={switchTurn}
+            className="bg-white/80 backdrop-blur-sm p-2 rounded-lg shadow-lg hover:bg-white/90 transition-all duration-300 hover:scale-105"
+          >
+            <ArrowRightLeft size={20} className="text-amber-800" />
+          </button>
+        </div>
       </div>
 
-      <div className="bg-gray-800 p-8 rounded-xl shadow-2xl">
+      <div className="bg-white/30 backdrop-blur-sm p-8 rounded-xl shadow-2xl">
         <div className="space-y-4">
           {renderBoard()}
         </div>
@@ -377,22 +388,21 @@ export function GameBoard() {
         <button
           onClick={rollDice}
           disabled={!!currentQuestion || showGradeSelect || isRolling}
-          className="bg-white p-4 rounded-lg shadow-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+          className="bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-lg hover:bg-white/90 transition-all duration-300 disabled:opacity-50 hover:scale-105"
         >
-          <DiceIcon size={70} className={isRolling ? 'animate-spin' : ''} />
-          {diceRoll && !isRolling && <span className="ml-2">{diceRoll}</span>}
+          <DiceIcon size={70} className={`text-amber-800 ${isRolling ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
       {showGradeSelect && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-8 rounded-lg transform transition-all duration-300 scale-100 opacity-100">
-            <h2 className="text-2xl mb-4">Select Grade</h2>
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-white/90 p-8 rounded-lg transform transition-all duration-300 scale-100 opacity-100 shadow-2xl">
+            <h2 className="text-2xl mb-4 text-amber-900">Select Grade</h2>
             {(['Junior 4', 'Junior 5', 'Junior 6'] as const).map(grade => (
               <button
                 key={grade}
                 onClick={() => selectGrade(grade)}
-                className="block w-full mb-2 p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="block w-full mb-2 p-2 bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors"
               >
                 {grade}
               </button>
@@ -402,14 +412,14 @@ export function GameBoard() {
       )}
 
       {currentQuestion && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-8 rounded-lg max-w-lg w-full transform transition-all duration-300 scale-100 opacity-100">
-            <h2 className="text-xl mb-4">{currentQuestion.text}</h2>
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-white/90 p-8 rounded-lg max-w-lg w-full transform transition-all duration-300 scale-100 opacity-100 shadow-2xl">
+            <h2 className="text-xl mb-4 text-amber-900">{currentQuestion.text}</h2>
             {currentQuestion.options.map((option, index) => (
               <button
                 key={index}
                 onClick={() => answerQuestion(index)}
-                className="block w-full mb-2 p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="block w-full mb-2 p-2 bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors"
               >
                 {option}
               </button>
@@ -420,7 +430,7 @@ export function GameBoard() {
 
       {showCorrectAnswer && (
         <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
-          <div className="bg-green-500 text-white px-6 py-4 rounded-lg shadow-xl flex items-center gap-2 transform animate-bounce">
+          <div className="bg-green-500/90 backdrop-blur-sm text-white px-6 py-4 rounded-lg shadow-xl flex items-center gap-2 transform animate-bounce">
             <CheckCircle className="w-6 h-6" />
             <span className="text-lg font-semibold">Correct Answer!</span>
           </div>
